@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facebook Auto-Posting Example</title>
+</head>
+<body>
+    <!-- Facebook Login Button (Optional if you want to keep it for testing) -->
+    <fb:login-button 
+        scope="public_profile,email"
+        onlogin="checkLoginState();">
+    </fb:login-button>
+  
+
+    <!-- Load the Facebook SDK for JavaScript -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+
+    <script>
+        window.fbAsyncInit = function() {
+          FB.init({
+            appId      : '495773973426067', // Your App ID
+            cookie     : true,              // Enable cookies to allow the server to access the session
+            xfbml      : true,              // Parse social plugins on this webpage
+            version    : 'v18.0'            // Use this Graph API version
+          });
+
+          FB.AppEvents.logPageView();   
+
+          // Check the initial login status
+          FB.getLoginStatus(function(response) {
+              statusChangeCallback(response);
+          });
+        };
+
+        (function(d, s, id){
+           var js, fjs = d.getElementsByTagName(s)[0];
+           if (d.getElementById(id)) {return;}
+           js = d.createElement(s); js.id = id;
+           js.src = "https://connect.facebook.net/en_US/sdk.js";
+           fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+
+        function checkLoginState() {
+            FB.getLoginStatus(function(response) {
+                statusChangeCallback(response);
+            });
+        }
+
+        function statusChangeCallback(response) {
+            console.log('statusChangeCallback');
+            console.log(response);
+            
+            if (response.status === 'connected') {
+                handleConnected(response.authResponse);
+            } else if (response.status === 'not_authorized') {
+                promptLogin();
+            } else {
+                promptLogin();
+            }
+        }
+
+        function handleConnected(authResponse) {
+            console.log('User is connected.');
+            console.log('Access Token:', authResponse.accessToken);
+            console.log('User ID:', authResponse.userID);
+            
+            // Automatically make a post after successful login
+            makePost();
+        }
+
+        function promptLogin() {
+            console.log('Prompting user to log in.');
+            FB.login(function(response) {
+                if (response.authResponse) {
+                    handleConnected(response.authResponse);
+                } else {
+                    console.log('User cancelled login or did not fully authorize.');
+                }
+            }, {scope: 'public_profile,email,pages_manage_posts,publish_to_groups'});
+        }
+
+        function makePost() {
+            const message = `
+                **Bold text**
+                *Italic text*
+                # Header 1
+                ## Header 2
+                - List item 1
+                - List item 2
+                [Link](https://example.com)
+            `;
+            
+            FB.api('/me/feed', 'post', { message: message }, function(response) {
+                if (!response || response.error) {
+                    alert('Error occurred: ' + response.error.message);
+                } else {
+                    alert('Post ID: ' + response.id);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
